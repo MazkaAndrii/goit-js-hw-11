@@ -2,7 +2,42 @@ body {
   background-color: rgb(0, 195, 255);
 }
 .search-form {
-  margin-top: 100px;
+  text-align: center;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  margin-bottom: 10px;
   display: flex;
   justify-content: center;
+}
+
+.search-image {
+  width: 20px;
+  height: 20px;
+}
+.search-button {
+  height: 38px;
+  width: 38px;
+  box-sizing: border-box;
+  border: #6c72cb 3px solid;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.search-button:hover,
+.search-button:focus {
+  border: #cb69c1 3px solid;
+}
+
+.main-input {
+  width: 180px;
+  height: 30px;
+  padding-left: 10px;
+  font-size: large;
+  border: #6c72cb 3px solid;
+  border-radius: 5px;
+  background-color: #eeedf0;
+  outline: none;
+  margin-right: 6px;
+}
+.main-input:focus {
+  border: #cb69c1 3px solid;
 }

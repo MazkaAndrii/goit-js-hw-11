@@ -1,7 +1,7 @@
 /**
  *1. Обозначить форму поиска
-  2. Добавить слушателя на сабмит
-  3. Написать функцию отправки HTPP -запроса по сабмиту (axios)
+  2. Добавить слушателя на кнопку Поиск
+  3. Написать функцию отправки HTPP -запроса по клику (axios)
   API key: 32012356-0368280beb1a1f5a21315c6c1
   4. Уведомления notiflix 
   Если бэкенд возвращает пустой массив, значит ничего подходящего найдено небыло. В таком случае показывай 
@@ -17,6 +17,7 @@ import notiflix from 'notiflix';
 const searchBtnRef = document.querySelector('.search-button');
 const searchValue = document.querySelector('.main-input');
 const imageList = document.querySelector('.gallery');
+const continueButton = document.querySelector('.load-more');
 
 const API_KEY = '32012356-0368280beb1a1f5a21315c6c1';
 
@@ -28,32 +29,37 @@ searchBtnRef.addEventListener('click', e => {
   getImagesAxios({ query: searchValue.value });
 });
 
-function getImagesAxios({ query }) {
+async function getImagesAxios({ query }) {
   const urlAPI = `https://pixabay.com/api/?key=${API_KEY}&q=${query}&image_type=photo&orientation=horizontal&safesearch=true&per_page=${PageSize}&page=${currentPage}`;
-  axios
-    .get(urlAPI)
-    .then(res => res.data)
-    .then(({ hits }) => {
-      renderGallery(hits);
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
+  try {
+    const resAxios = await axios.get(urlAPI).then(res => res.data.hits);
+    if (resAxios.length === 0) {
+      notiflix.Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again'
+      );
+      return;
+    }
+    renderGallery(resAxios);
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 // рендер галлереи
-function renderGallery(hits) {
-  const imgMarkup = hits.map(
-    ({
-      webformatURL,
-      largeImageURL,
-      tags,
-      likes,
-      views,
-      comments,
-      downloads,
-    }) => {
-      return `
+function renderGallery(array) {
+  imageList.innerHTML = '';
+  const imgMarkup = array
+    .map(
+      ({
+        webformatURL,
+        largeImageURL,
+        tags,
+        likes,
+        views,
+        comments,
+        downloads,
+      }) => {
+        return `
           <div class="photo-card">
           <a class="gallery-item" href="${largeImageURL}">
     <img src="${webformatURL}" alt="${tags}" loading="lazy" class="photo-card__image"/>
@@ -73,8 +79,16 @@ function renderGallery(hits) {
     </div>
   </div> </a>
   `;
-    }
-  );
+      }
+    )
+    .join('');
 
-  imageList.insertAdjacentHTML('beforeend', imgMarkup.join(''));
+  imageList.insertAdjacentHTML('beforeend', imgMarkup);
 }
+
+// кнопка load-more
+
+continueButton.addEventListener('click', e => {
+  e.preventDefault();
+  getImagesAxios(e);
+});

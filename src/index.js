@@ -1,54 +1,113 @@
-/**
- *1. Обозначить форму поиска
-  2. Добавить слушателя на кнопку Поиск
-  3. Написать функцию отправки HTPP -запроса по клику (axios)
-  API key: 32012356-0368280beb1a1f5a21315c6c1
-  4. Уведомления notiflix 
-  Если бэкенд возвращает пустой массив, значит ничего подходящего найдено небыло. В таком случае показывай 
-  уведомление с текстом "Sorry, there are no images matching your search query. Please try again."
-  5. Написать функцию рендера разметки
-  6. Пагинация + кнопка следующего запроса
-
- */
-
 import axios from 'axios';
-import notiflix from 'notiflix';
+import Notiflix from 'notiflix';
+import { refs } from './refs.js';
 
-const searchBtnRef = document.querySelector('.search-button');
-const searchValue = document.querySelector('.main-input');
-const imageList = document.querySelector('.gallery');
-const continueButton = document.querySelector('.load-more');
-
+// Ключи для получения доступа к API и первая страница
+const API = 'https://pixabay.com/api';
 const API_KEY = '32012356-0368280beb1a1f5a21315c6c1';
+const PER_PAGE = 40;
+let page = 1;
 
-const PageSize = 40;
-let currentPage = 1;
+// Функция для кнопки "Показать еще". При странице "1" прячет кнопку.
+function mainPage() {
+  if (page === 1) {
+    refs.continueButton.classList.add('is-hidden');
+  }
+}
 
-searchBtnRef.addEventListener('click', e => {
-  e.preventDefault();
-  imageList.innerHTML = '';
-  getImagesAxios({ query: searchValue.value });
-});
+mainPage();
 
-async function getImagesAxios({ query }) {
-  const urlAPI = `https://pixabay.com/api/?key=${API_KEY}&q=${query}&image_type=photo&orientation=horizontal&safesearch=true&per_page=${PageSize}&page=${currentPage}`;
+// Слушатель на кнопку "Показать еще" и кнопку "Найти"
+refs.mainForm.addEventListener('submit', addGallery);
+refs.continueButton.addEventListener('click', loadMore);
+
+// Функция для слушателя на кнопку "Найти"
+function addGallery(event) {
+  if (!refs.continueButton.classList.contains('is-hidden') && page > 1) {
+    refs.continueButton.classList.add('is-hidden');
+  }
+
+  resetPageCount();
+  clearMarkup();
+  getImages(event);
+}
+
+// Функция для слушателя на кнопку "Показать еще"
+function loadMore(event) {
+  getImages(event);
+}
+
+// Получение картинок
+function getImages(event) {
+  event.preventDefault();
+
+  const requestValue = refs.input.value;
+
+  getData(requestValue)
+    .then(response => {
+      data(response);
+    })
+    .catch(error => console.log(error.message));
+}
+
+function data(response) {
+  const pics = response.data.hits;
+  renderGallery(pics);
+}
+
+const axios = require('axios');
+
+async function getData(searchword) {
+  const search = searchword.trim();
   try {
-    const resAxios = await axios.get(urlAPI).then(res => res.data.hits);
-    if (resAxios.length === 0) {
-      notiflix.Notify.failure(
+    if (search === '') {
+      Notiflix.Notify.warning('Please type in the field what you want to find');
+      clearMarkup();
+      return;
+    }
+    const response = await axios.get(
+      `${API}/?key=${API_KEY}&q=${search}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=${PER_PAGE}`
+    );
+
+    if (page === 1 && response.data.totalHits > 0) {
+      Notiflix.Notify.success(
+        `Hooray! We found ${response.data.totalHits} images`
+      );
+      refs.continueButton.classList.remove('is-hidden');
+    }
+
+    if (
+      page >= response.data.totalHits / PER_PAGE &&
+      response.data.totalHits > 0
+    ) {
+      Notiflix.Notify.warning(
+        'We have already reached the end of the collection'
+      );
+      refs.continueButton.classList.add('is-hidden');
+    }
+
+    if (response.data.hits.length === 0) {
+      Notiflix.Notify.failure(
         'Sorry, there are no images matching your search query. Please try again'
       );
       return;
     }
-    renderGallery(resAxios);
+
+    page += 1;
+    return response;
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 }
 
-// рендер галлереи
-function renderGallery(array) {
-  const imgMarkup = array
+// Функция для сброса счетчика страниц
+function resetPageCount() {
+  page = 1;
+}
+
+// Рэндеринг картинок(галереи)
+function renderGallery(pictureArray) {
+  const imgMarkup = pictureArray
     .map(
       ({
         webformatURL,
@@ -62,7 +121,7 @@ function renderGallery(array) {
         return `
           <div class="photo-card">
           <a class="gallery-item" href="${largeImageURL}">
-    <img src="${webformatURL}" alt="${tags}" loading="lazy" class="photo-card__image"/>
+    <img src="${webformatURL}" alt="${tags}" loading="lazy" class="photo-card__image"/>  
     <div class="info">
       <p class="info-item">
         <b>Likes : ${likes}</b>
@@ -82,13 +141,10 @@ function renderGallery(array) {
       }
     )
     .join('');
-
-  imageList.insertAdjacentHTML('beforeend', imgMarkup);
+  refs.gallery.insertAdjacentHTML('beforeend', imgMarkup);
 }
 
-// кнопка load-more
-
-continueButton.addEventListener('click', e => {
-  e.preventDefault();
-  getImagesAxios(e);
-});
+// Очистка галереи
+function clearMarkup() {
+  refs.gallery.innerHTML = '';
+}

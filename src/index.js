@@ -26,6 +26,7 @@ let currentPage = 1;
 
 searchBtnRef.addEventListener('click', e => {
   e.preventDefault();
+  imageList.innerHTML = '';
   getImagesAxios({ query: searchValue.value });
 });
 
@@ -47,7 +48,6 @@ async function getImagesAxios({ query }) {
 
 // рендер галлереи
 function renderGallery(array) {
-  imageList.innerHTML = '';
   const imgMarkup = array
     .map(
       ({

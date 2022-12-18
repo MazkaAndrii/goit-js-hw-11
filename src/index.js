@@ -2,7 +2,6 @@ import axios from 'axios';
 import Notiflix from 'notiflix';
 import { refs } from './refs.js';
 
-// Ключи для получения доступа к API и первая страница
 const API = 'https://pixabay.com/api';
 const API_KEY = '32012356-0368280beb1a1f5a21315c6c1';
 const PER_PAGE = 40;

@@ -58,6 +58,7 @@ const axios = require('axios');
 
 async function getData(searchword) {
   const search = searchword.trim();
+
   try {
     if (search === '') {
       Notiflix.Notify.warning('Please type in the field what you want to find');

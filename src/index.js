@@ -54,7 +54,7 @@ function data(response) {
   renderGallery(pics);
 }
 
-const axios = require('axios');
+// const axios = require('axios');
 
 async function getData(searchword) {
   const search = searchword.trim();
